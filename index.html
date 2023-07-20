@@ -1,13 +1,31 @@
 <!DOCTYPE html>
+
 <html>
     <head>
         <title>NewSys Sheet</title>
         <link rel="stylesheet" href="src/mainstyle.css">
         <script src="src/scripts.js"></script>
+
         <script>
             var newChar = new Character();
             var rollSkillsStates = [false,false,false,false,false,false,false,false,false,false]
-            var rollSkillButtons = []
+            const stressBoxes = [];
+            var rollSkillButtons = [];
+
+            const leftSideSections = [];
+            const leftSideNavButtons = [];
+
+            const midSections = [];
+            const midNavButtons = [];
+
+            const rightSideSections = [];
+            const rightSideNavButtons = [];
+
+            function showHideLeftSide(pos){
+                ShowHideSubsections(leftSideSections,pos);
+                EnableDisableNavButtons(leftSideNavButtons,pos)
+            }
+
             function UpdateCharacterSheet(){
                 document.getElementById("CharacterName").innerHTML = newChar.getName();
                 let charSkills = newChar.getSkills()
@@ -94,6 +112,74 @@
                 }
             }
 
+            function toggleStressBox(_pos,_state){
+                let state = false
+
+                //if no state given, assume flipflop
+                if(_state == null){
+                    state = newChar.getStressBoxes()[_pos]
+                    if(state ==true){
+                        state = false;
+                    }else{
+                        state = true;
+                    }
+                    newChar.setStressBox(_pos,state)
+                }else{
+                    state = _state
+                }
+
+                if(state == true){
+                    stressBoxes[_pos].style.backgroundColor = STRESS_BOX_ACTIVE_COLOR
+                }else{
+                    stressBoxes[_pos].style.backgroundColor = BUTTON_INACTIVE_COLOR
+                }
+            }
+
+            function importCharacter(){
+                const selectedFile = document.getElementById("ImportCharacterFile").files[0]
+                if(selectedFile == null){return false}
+                //get file extention
+                const lastDot = selectedFile.name.lastIndexOf(".")
+                const ext = selectedFile.name.substring(lastDot+1)
+                console.log(ext)
+                if(ext != CHAR_FILE_EXTENTION){return false}
+
+                const reader = new FileReader();
+                reader.readAsText(selectedFile);
+
+                //executed when charater loaded...probably
+                let eventListener = reader.addEventListener("loadend",(event) => {
+                    const newObj = JSON.parse(reader.result)
+                    newChar.overwriteCharacterFromObject(newObj)
+
+                    //update website
+                    UpdateCharacterSheet()
+                    UpdateSkillButtons()
+
+                    let sb = newChar.getStressBoxes()
+                    for(let i=0;i<sb.length;i++){
+                        toggleStressBox(i,sb[i])
+                    }
+
+                    reader.removeEventListener("loadend",eventListener)
+                    showHideLeftSide(0)
+                });
+            }
+
+            function downloadCharacter() {
+                const link = document.createElement("a");
+                console.log(JSON.stringify(newChar))
+                const file = new Blob([JSON.stringify(newChar)],{type:'text/plain'});
+                link.href = URL.createObjectURL(file);
+                link.download = newChar.getName() + "." + CHAR_FILE_EXTENTION
+                link.click();
+                URL.revokeObjectURL(link.href)
+            }
+
+            function copyOutput(){
+                                const textToCopy = document.getElementById("outputRollCodeActual");
+                                navigator.clipboard.writeText(textToCopy.innerHTML);
+                            }
         </script>
     </head>
 
@@ -102,7 +188,9 @@
             <h1>NEWSYS ROLL20 CHARACTER HELPER</h1>
             <h3>a helper site for managing characters for NewSys</h3>
         </header>
+
         <div class="mainSections">
+
             <!--CHAR SHEET / CREATE NEW / SAVE-LOAD -->
             <section id="LeftSection">
                 <div class="mainSectionNavBar">
@@ -124,44 +212,13 @@
                             <th>Used</th>
                         </tr>
                     </table>
-    
+
                     <section id="StressBoxes">
                         <h2>STRESS</h2>
                         <button class="StressBoxButton" id="Stress1" onclick="toggleStressBox(0)">1</button>
                         <button class="StressBoxButton" id="Stress2" onclick="toggleStressBox(1)">2</button>
                         <button class="StressBoxButton" id="Stress3" onclick="toggleStressBox(2)">3</button>
                         <button class="StressBoxButton" id="Stress4" onclick="toggleStressBox(3)">4</button>
-
-                        <script>
-                            const stressBoxes = [];
-                            stressBoxes[0] = document.getElementById("Stress1")
-                            stressBoxes[1] = document.getElementById("Stress2")
-                            stressBoxes[2] = document.getElementById("Stress3")
-                            stressBoxes[3] = document.getElementById("Stress4")
-
-                            function toggleStressBox(_pos,_state){
-                                let state = false
-
-                                //if no state given, assume flipflop
-                                if(_state == null){
-                                    state = newChar.getStressBoxes()[_pos]
-                                    if(state ==true){
-                                        state = false;
-                                    }else{
-                                        state = true;
-                                    }
-                                    newChar.setStressBox(_pos,state)
-                                }else{
-                                    state = _state
-                                }
-
-                                if(state == true){
-                                    stressBoxes[_pos].style.backgroundColor = STRESS_BOX_ACTIVE_COLOR
-                                }else{
-                                    stressBoxes[_pos].style.backgroundColor = BUTTON_INACTIVE_COLOR
-                                }
-                            }
-                        </script>
                     </section>
     
                     <table id="ConsequenceTable"></table>
@@ -176,69 +233,7 @@
                     <button id="ImportCharacterButton" onclick="importCharacter()">IMPORT</button>
                     <br>
                     <button id="ExportCharacter" onclick="downloadCharacter()">Export</button>
-                    <script>
-                        function importCharacter(){
-
-                            const selectedFile = document.getElementById("ImportCharacterFile").files[0]
-                            if(selectedFile == null){return false}
-                            //get file extention
-                            const lastDot = selectedFile.name.lastIndexOf(".")
-                            const ext = selectedFile.name.substring(lastDot+1)
-                            console.log(ext)
-                            if(ext != CHAR_FILE_EXTENTION){return false}
-        
-                            const reader = new FileReader();
-                            reader.readAsText(selectedFile);
-                            
-                            //executed when charater loaded...probably
-                            let eventListener = reader.addEventListener("loadend",(event) => {
-                                const newObj = JSON.parse(reader.result)
-                                newChar.overwriteCharacterFromObject(newObj)
-
-                                //update website
-                                UpdateCharacterSheet()
-                                UpdateSkillButtons()
-
-                                let sb = newChar.getStressBoxes()
-                                for(let i=0;i<sb.length;i++){
-                                    toggleStressBox(i,sb[i])
-                                }
-
-                                reader.removeEventListener("loadend",eventListener)
-                                showHideLeftSide(0)
-                            });
-                        }
-
-                        function downloadCharacter() {
-                            const link = document.createElement("a");
-                            console.log(JSON.stringify(newChar))
-                            const file = new Blob([JSON.stringify(newChar)],{type:'text/plain'});
-                            link.href = URL.createObjectURL(file);
-                            link.download = newChar.getName() + "." + CHAR_FILE_EXTENTION
-                            link.click();
-                            URL.revokeObjectURL(link.href)
-                        }
-                    </script>
                 </div>
-
-                <script>
-                    const sections = [];
-                    sections[0] = document.getElementById("characterSheet");
-                    sections[1] = document.getElementById("charCreate");
-                    sections[2] = document.getElementById("charSaveLoad");
-
-                    const navButtons = [];
-                    navButtons[0] = document.getElementById("charSheetNavButton")
-                    navButtons[1] = document.getElementById("charCreateNavButton")
-                    navButtons[2] = document.getElementById("charSaveLoadNavButton")
-
-                    function showHideLeftSide(pos){
-                        ShowHideSubsections(sections,pos);
-                        EnableDisableNavButtons(navButtons,pos)
-                    }
-
-                    showHideLeftSide(0)
-                </script>
             </section>
 
             <!-- NOTES / FIELD / STATS-->
@@ -251,7 +246,8 @@
 
                 <div class="subSection" id="notes">
                     <input type="text" id="notesInput" name="notes" 
-                    style="
+                    style=
+                    "
                         height: auto;
                         width: 95%;
                         min-height: 90%;
@@ -291,20 +287,14 @@
 
                     <h3>Output Roll Code:</h3>
                     <div>
-                        
                         <p id="outputRollCode"><samp id="outputRollCodeActual">OUTPUT CODE</samp></p>
                         <button id="CopyOutputRollButton" onclick="copyOutput()">Copy Code</button>
-
-                        <script>
-                            function copyOutput(){
-                                const textToCopy = document.getElementById("outputRollCodeActual");
-                                navigator.clipboard.writeText(textToCopy.innerHTML);
-                            }
-                        </script>
                     </div>
 
                     <script>
-                        const skillsContainer = document.getElementById("skillsButtonDiv")
+
+                        const skillsContainer = document.getElementById("skillsButtonDiv");
+
                         for(let i =0; i<CHAR_DEFAULT_SKILL_LIMIT;i++){
                             rollSkillButtons[i] = document.createElement("BUTTON")
                             rollSkillButtons[i].className = "skillButton"
@@ -336,23 +326,42 @@
             </section>
         </div>
 
-        <script>
-            const skillTable = document.getElementById("CharTable")
-            const consequenceTable = document.getElementById("ConsequenceTable")
 
-            for(let i=0;i<CHAR_DEFAULT_SKILL_LIMIT;i++){
-                let newRow = skillTable.insertRow()
-                newRow.insertCell(0).innerHTML = "NONE"
-                newRow.insertCell(1).innerHTML = "X"
-                newRow.insertCell(2).innerHTML = "X"
-                newRow.insertCell(3).innerHTML = "X"
-            }
-
-            for(let i=0;i<4;i++){
-                let newRow = consequenceTable.insertRow()
-                    newRow.insertCell(0).innerHTML = "NONE"
-                    newRow.insertCell(1).innerHTML = (i+1)*-3
-            }
-        </script>
     </body>
+
+    <script>
+        //init declared var after everything loaded
+        stressBoxes[0] = document.getElementById("Stress1");
+        stressBoxes[1] = document.getElementById("Stress2");
+        stressBoxes[2] = document.getElementById("Stress3");
+        stressBoxes[3] = document.getElementById("Stress4");
+
+        leftSideSections[0] = document.getElementById("characterSheet");
+        leftSideSections[1] = document.getElementById("charCreate");
+        leftSideSections[2] = document.getElementById("charSaveLoad");
+
+        leftSideNavButtons[0] = document.getElementById("charSheetNavButton");
+        leftSideNavButtons[1] = document.getElementById("charCreateNavButton");
+        leftSideNavButtons[2] = document.getElementById("charSaveLoadNavButton");
+
+        const skillTable = document.getElementById("CharTable")
+        const consequenceTable = document.getElementById("ConsequenceTable")
+
+        for(let i=0;i<CHAR_DEFAULT_SKILL_LIMIT;i++){
+            let newRow = skillTable.insertRow()
+            newRow.insertCell(0).innerHTML = "NONE"
+            newRow.insertCell(1).innerHTML = "X"
+            newRow.insertCell(2).innerHTML = "X"
+            newRow.insertCell(3).innerHTML = "X"
+        }
+
+        for(let i=0;i<4;i++){
+            let newRow = consequenceTable.insertRow()
+                newRow.insertCell(0).innerHTML = "NONE"
+                newRow.insertCell(1).innerHTML = (i+1)*-3
+        }
+
+        showHideLeftSide(0)
+        
+    </script>
 </html>
