@@ -42,6 +42,7 @@ header{
     margin: 0.5%;
     padding: 0.5%;
 }
+
 .mainSectionNavBar > button{
     background-color: #5e708c;
     border: none;
@@ -50,6 +51,18 @@ header{
     text-align: center;
     display: inline-block;
     font-size: 70%;
+    margin: 0.1%;
+    cursor: pointer;
+}
+
+#rollStylesContainer > button{
+    background-color: #5e708c;
+    border: none;
+    color: white;
+    padding: 1%;
+    text-align: center;
+    display: inline-block;
+    font-size: 150%;
     margin: 0.1%;
     cursor: pointer;
 }

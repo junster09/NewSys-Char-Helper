@@ -2,9 +2,16 @@
 const CHAR_FILE_EXTENTION = "nsc"
 const CHAR_DEFAULT_SKILL_LIMIT = 10
 
+//0: Combat ; 1: Non-Combat
+const DICE = [
+    "d5",
+    "d10!"
+]
+
+
+//colors
 const BUTTON_ACTIVE_COLOR = "#005fff"
 const BUTTON_INACTIVE_COLOR = "#4e6a99"
-
 const STRESS_BOX_ACTIVE_COLOR = "#e89090"
 
 class SkillRank{
@@ -16,7 +23,7 @@ class SkillRank{
 }
 
 const skillRankDetails = []
-skillRankDetails[0] = new SkillRank("Unknown","#ffffff",99)
+skillRankDetails[0] = new SkillRank("UNK","#ffffff",99)
 skillRankDetails[1] = new SkillRank("Bronze","#b36e00",10)
 skillRankDetails[2] = new SkillRank("Silver","#a8a8a8",20)
 skillRankDetails[3] = new SkillRank("Gold","#ffe882",30)
@@ -27,6 +34,7 @@ const SkillRanks = {
     SILVER: 2,
     GOLD: 3,
 }
+
 class BasicSkill {
     constructor(){
         this.name = "";
@@ -57,6 +65,7 @@ class BasicSkill {
         + this.level + "\nTimes Used This Level: " + this.timesUsedSinceLastLevel;
     }
 }
+
 class Character{
     constructor(){
         this.name = "";
@@ -119,4 +128,84 @@ class Character{
         this.stressBoxes[pos] = state
     }
 
+}
+
+class CharCreateSkillButton{
+    constructor(_parent,_skillSlot,_char){
+        this.parent = _parent
+        this.skillSlot = _skillSlot
+        if (_char != null){this.char = _char}else{this.skill = new Character()}
+        this.buttonListener = null
+        this.skillRef = this.char.getSkills()[_skillSlot]
+        this.htmlBox = null
+    }
+
+    buildButton(){
+        this.htmlBox = document.createElement("DIV")
+        this.htmlBox.class = "skillCreateSkill"
+        this.htmlBox.id = "skillCreate" + this.skillSlot
+
+        const nameLabel = document.createElement("LABEL")
+        nameLabel.htmlFor = "skillName" + this.skillSlot
+        nameLabel.innerHTML = "[" + (this.skillSlot + 1) + "]"
+
+        const nameInput = document.createElement("INPUT")
+        nameInput.type = "text"
+        nameInput.id = "skillName" + this.skillSlot
+        nameInput.name = nameInput.id
+        nameInput.placeholder = "skill name"
+        nameInput.size = "10"
+
+        const rankSelector = document.createElement("SELECT");rankSelector.name = "skillRank" + this.skillSlot;
+        for(let i=0;i<skillRankDetails.length;i++){
+            const e = document.createElement("OPTION")
+            e.value = i
+            e.innerHTML = skillRankDetails[i].name
+            rankSelector.appendChild(e)
+        }
+
+        const levelLabel = document.createElement("LABEL")
+        levelLabel.htmlFor = "skillLevel" + this.skillSlot
+        levelLabel.innerHTML = "Level:"
+
+        const levelInput = document.createElement("INPUT")
+        levelInput.type = "number"
+        levelInput.id = "skillLevel" + this.skillSlot; levelInput.name = levelInput.id
+        levelInput.placeholder = 0
+        levelInput.min = 0
+        levelInput.max = 999
+        levelInput.step = 1
+
+        const usedLabel = document.createElement("LABEL")
+        usedLabel.htmlFor = "skillUsed" + this.skillSlot
+        usedLabel.innerHTML = "Used:"
+        const usedInput = document.createElement("INPUT")
+        usedInput.type = "number"
+        usedInput.id = "skillUsed" + this.skillSlot; levelInput.name = levelInput.id
+        usedInput.placeholder = 0
+        usedInput.min = 0
+        usedInput.max = 999
+        usedInput.step = 1
+
+        const br = document.createElement("BR")
+
+
+        this.htmlBox.appendChild(nameLabel)
+        this.htmlBox.appendChild(nameInput)
+
+        this.htmlBox.appendChild(rankSelector)
+        this.htmlBox.appendChild(br)
+
+        this.htmlBox.appendChild(levelLabel)
+        this.htmlBox.appendChild(levelInput)
+
+        this.htmlBox.appendChild(usedLabel)
+        this.htmlBox.appendChild(usedInput)
+
+        this.parent.appendChild(this.htmlBox)
+    }
+
+    deleteButton(){
+
+    }
 }

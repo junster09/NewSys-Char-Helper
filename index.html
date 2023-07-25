@@ -7,10 +7,13 @@
         <script src="src/scripts.js"></script>
 
         <script>
-            var newChar = new Character();
-            var rollSkillsStates = [false,false,false,false,false,false,false,false,false,false]
+            //oh lol the one char class luh-mao
+            const newChar = new Character();
+
+            const rollSkillsStates = [false,false,false,false,false,false,false,false,false,false]
             const stressBoxes = [];
-            var rollSkillButtons = [];
+
+            const rollSkillButtons = [];
 
             const leftSideSections = [];
             const leftSideNavButtons = [];
@@ -21,9 +24,26 @@
             const rightSideSections = [];
             const rightSideNavButtons = [];
 
+            const rollStylesButtons = [];
+
+            //0: Combat ; 1: Non-Combat
+            let rollStyle = 0;
+            const diceType = [5,10]
+
             function showHideLeftSide(pos){
                 ShowHideSubsections(leftSideSections,pos);
                 EnableDisableNavButtons(leftSideNavButtons,pos)
+            }
+
+            function showHideMiddle(pos){
+                ShowHideSubsections(midSections,pos);
+                EnableDisableNavButtons(midSections,pos);
+            }
+
+            function showHideRightSide(pos){
+                ShowHideSubsections(rightSideNavButtons,pos);
+                EnableDisableNavButtons(rightSideNavButtons,pos);
+
             }
 
             function UpdateCharacterSheet(){
@@ -58,31 +78,49 @@
                 }
             }
 
+            function UpdateRollStyle(pos){
+                EnableDisableNavButtons(rollStylesButtons,pos);
+                rollStyle = pos;
+                UpdateRollOutput();
+            }
+
             function UpdateRollOutput(){
                 const textBox = document.getElementById("outputRollCodeActual")
                 let skillset = newChar.getSkills()
 
-                let outputText = "/r 1d10!"
+                let outputText = ""
+
+                switch(rollStyle){
+                    case 0:
+                        outputText = "/r 2d5"
+                        break;
+                    case 1:
+                        outputText = "/r 1d10!"
+                        break;
+                    default:
+                        outputText = "/r "
+                }
 
                 for(let i=0;i<newChar.getSkillLimit();i++){
                     //covers both null and false cases
                     if(rollSkillsStates[i] != true){continue;}
                     if(skillset[i] == null){continue;}
+                    //end nullchecks
 
-                    let rollingD10s = Math.floor(skillset[i].getLevel()/10)
-                    let remaing = skillset[i].getLevel()%10
+                    let rollingDice = Math.floor(skillset[i].getLevel()/diceType[rollStyle])
+                    let remaing = skillset[i].getLevel()%diceType[rollStyle]
                     outputText = outputText + " + ("
-                    if(rollingD10s > 0){
-                        outputText = outputText + rollingD10s + "d10!";
+                    if(rollingDice > 0){
+                        outputText = outputText + rollingDice + DICE[rollStyle];
                     }
-                    if(rollingD10s > 0 && remaing != 0){
+                    if(rollingDice > 0 && remaing != 0){
                         outputText = outputText + " + 1d" + remaing;
                     }else if(remaing != 0){
                         outputText = outputText + "1d" + remaing;
                     }
                     outputText = outputText + ")"
                 }
-                console.log(outputText)
+
                 outputText =  outputText + (document.getElementById("ExtraRollCodeInput").value)
                 textBox.innerHTML = outputText
             }
@@ -177,9 +215,13 @@
             }
 
             function copyOutput(){
-                                const textToCopy = document.getElementById("outputRollCodeActual");
-                                navigator.clipboard.writeText(textToCopy.innerHTML);
-                            }
+                const textToCopy = document.getElementById("outputRollCodeActual");
+                navigator.clipboard.writeText(textToCopy.innerHTML);
+            }
+
+            function SubmitCharacterCreator(){
+                
+            }
         </script>
     </head>
 
@@ -224,12 +266,19 @@
                     <table id="ConsequenceTable"></table>
                 </div>
 
-                <div class="subSection" id="charCreate" hidden>
+                <div class="subSection" id="charCreate">
+                    <h3>CHARACTER CREATOR</h3>
+                    <label for="nameField">Name:</label>
+                    <input type="text" id="nameField" name="charName"
+                    placeholder="name">
+                    <br>
 
+                    <h4>SKILLS</h4>
+                    <div id="skillCreateContainer"></div>
                 </div>
                 
-                <div class="subSection" id="charSaveLoad" hidden>
-                    <input type="file" id="ImportCharacterFile"/>
+                <div class="subSection" id="charSaveLoad">
+                    <input type="file" id="ImportCharacterFile" accept=".nsc"/>
                     <button id="ImportCharacterButton" onclick="importCharacter()">IMPORT</button>
                     <br>
                     <button id="ExportCharacter" onclick="downloadCharacter()">Export</button>
@@ -245,14 +294,8 @@
                 </div>
 
                 <div class="subSection" id="notes">
-                    <input type="text" id="notesInput" name="notes" 
-                    style=
-                    "
-                        height: auto;
-                        width: 95%;
-                        min-height: 90%;
-                    "
-                    />
+                    <textarea id="notesField" name="notes" rows="40" cols="50">
+                    </textarea>
                 </div>
                 
             </section>
@@ -265,15 +308,9 @@
                 </div>
                 <div class="subSection" id="rollManager">
                     <h3>Roll Style: </h3>
-                    <div>
-                        <label class="radioContainer">Combat
-                            <input type="radio" checked="checked" name="RollTypeSelect" value="0" id="CombatRollButton">
-                            <span class="checkmark"></span>
-                        </label>
-                        <label class="radioContainer">Non-Combat
-                            <input type="radio" name="RollTypeSelect" value="1" id="NonCombatRollButton">
-                            <span class="checkmark"></span>
-                        </label>
+                    <div id="rollStylesContainer">
+                        <button id="rollStyleCombatButton" onclick="UpdateRollStyle(0)">COMBAT</button>
+                        <button id="rollStyleNonCombatButton" onclick="UpdateRollStyle(1)">NON-COMBAT</button>
                     </div>
 
                     <h3>Roll Skills: </h3>
@@ -330,7 +367,9 @@
     </body>
 
     <script>
-        //init declared var after everything loaded
+//init declared var after everything loaded
+
+    //Left Side Stuff
         stressBoxes[0] = document.getElementById("Stress1");
         stressBoxes[1] = document.getElementById("Stress2");
         stressBoxes[2] = document.getElementById("Stress3");
@@ -344,9 +383,15 @@
         leftSideNavButtons[1] = document.getElementById("charCreateNavButton");
         leftSideNavButtons[2] = document.getElementById("charSaveLoadNavButton");
 
+    
+    //Right Side Stuff
+        rollStylesButtons[0] = document.getElementById("rollStyleCombatButton");
+        rollStylesButtons[1] = document.getElementById("rollStyleNonCombatButton");
+//build default stuff
         const skillTable = document.getElementById("CharTable")
         const consequenceTable = document.getElementById("ConsequenceTable")
 
+    //default skills
         for(let i=0;i<CHAR_DEFAULT_SKILL_LIMIT;i++){
             let newRow = skillTable.insertRow()
             newRow.insertCell(0).innerHTML = "NONE"
@@ -355,13 +400,30 @@
             newRow.insertCell(3).innerHTML = "X"
         }
 
+    //default consequences
         for(let i=0;i<4;i++){
             let newRow = consequenceTable.insertRow()
                 newRow.insertCell(0).innerHTML = "NONE"
                 newRow.insertCell(1).innerHTML = (i+1)*-3
         }
 
-        showHideLeftSide(0)
+    //Character Creator skills
+
+        let skillCreateContainer = document.getElementById("skillCreateContainer")
+        for(let i=0;i<CHAR_DEFAULT_SKILL_LIMIT;i++){
+            let e = new CharCreateSkillButton(skillCreateContainer,i,newChar)
+            e.buildButton()
+            skillCreateContainer.appendChild(document.createElement("BR"))
+        }
         
+    //Save load (since I coudln't do it inline :c )
+        document.getElementById("ImportCharacterFile").accept = "." + CHAR_FILE_EXTENTION
+//Set default section states
+    //left side
+        showHideLeftSide(2)
+        showHideMiddle(0)
+        showHideRightSide(0)
+    //right side
+        UpdateRollStyle(1)
     </script>
 </html>
