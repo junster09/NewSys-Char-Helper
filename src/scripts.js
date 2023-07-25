@@ -84,7 +84,7 @@ class Character{
     }
 
     addSkill(_skillSlot,_skill){
-        if (this.skills[_skillSlot - 1] == null && _skillSlot <= this.skillLimit) {
+        if (_skill != null && _skillSlot <= this.skillLimit) {
             this.skills[(_skillSlot - 1)] = _skill;
         }
     }
@@ -104,8 +104,8 @@ class Character{
         this.currentFatePoints = newChar.currentFatePoints;
 
         for(let i=0;i<newChar.skills.length;i++){
-            const e = newChar.skills[i]
-            const tempSkill = new BasicSkill()
+            let e = newChar.skills[i]
+            let tempSkill = new BasicSkill()
             tempSkill.init(e.name,e.rank,e.level,e.timesUsedSinceLastLevel)
             this.addSkill((i+1),tempSkill)
         }
@@ -203,6 +203,16 @@ class CharCreateSkillButton{
         this.htmlBox.appendChild(usedInput)
 
         this.parent.appendChild(this.htmlBox)
+
+        const inputRefs = {
+            name: nameInput,
+            rank: rankSelector,
+            level: levelInput,
+            used: usedInput
+        }
+
+        return inputRefs
+
     }
 
     deleteButton(){

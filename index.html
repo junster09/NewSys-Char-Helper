@@ -8,7 +8,7 @@
 
         <script>
             //oh lol the one char class luh-mao
-            const newChar = new Character();
+            var newChar = new Character();
 
             const rollSkillsStates = [false,false,false,false,false,false,false,false,false,false]
             const stressBoxes = [];
@@ -26,6 +26,7 @@
 
             const rollStylesButtons = [];
 
+            const createCharacterSkillListInputs = [];
             //0: Combat ; 1: Non-Combat
             let rollStyle = 0;
             const diceType = [5,10]
@@ -47,6 +48,7 @@
             }
 
             function UpdateCharacterSheet(){
+                //console.log(newChar.getName())
                 document.getElementById("CharacterName").innerHTML = newChar.getName();
                 let charSkills = newChar.getSkills()
                 let charConsequences = newChar.getConsequences()
@@ -72,7 +74,6 @@
                 //setup Consequence Table
                 for(let i=0;i<4;i++){
                     if(consequenceTable.rows[i] != null){
-                        console.log(charConsequences[i])
                         consequenceTable.rows[i].cells[0].innerHTML = charConsequences[i]
                     }
                 }
@@ -92,10 +93,10 @@
 
                 switch(rollStyle){
                     case 0:
-                        outputText = "/r 2d5"
+                        outputText = "/r [[2d5]][base]"
                         break;
                     case 1:
-                        outputText = "/r 1d10!"
+                        outputText = "/r [[1d10!]][base]"
                         break;
                     default:
                         outputText = "/r "
@@ -107,9 +108,11 @@
                     if(skillset[i] == null){continue;}
                     //end nullchecks
 
+                    //"prepared dice look like this:"
+                    // [[{{XdX},0d0+MIN}kh1]]
                     let rollingDice = Math.floor(skillset[i].getLevel()/diceType[rollStyle])
                     let remaing = skillset[i].getLevel()%diceType[rollStyle]
-                    outputText = outputText + " + ("
+                    outputText = outputText + " + [["
                     if(rollingDice > 0){
                         outputText = outputText + rollingDice + DICE[rollStyle];
                     }
@@ -118,7 +121,7 @@
                     }else if(remaing != 0){
                         outputText = outputText + "1d" + remaing;
                     }
-                    outputText = outputText + ")"
+                    outputText = outputText + "]][" + skillset[i].getName() +"]"
                 }
 
                 outputText =  outputText + (document.getElementById("ExtraRollCodeInput").value)
@@ -179,7 +182,6 @@
                 //get file extention
                 const lastDot = selectedFile.name.lastIndexOf(".")
                 const ext = selectedFile.name.substring(lastDot+1)
-                console.log(ext)
                 if(ext != CHAR_FILE_EXTENTION){return false}
 
                 const reader = new FileReader();
@@ -220,7 +222,33 @@
             }
 
             function SubmitCharacterCreator(){
+                var tempChar = new Character()
+                tempChar.init(document.getElementById("nameField").value)
                 
+
+                for(let i=0;i<createCharacterSkillListInputs.length;i++){
+                    var tempSkill = new BasicSkill()
+                    var ref = createCharacterSkillListInputs[(i)]
+                    if(ref.name.value == ""){ref.name.value = "NONE"}
+                    if(ref.level.value == "" || isNaN(ref.level.value)){ref.level.value = 0}
+                    if(ref.used.value =="" || isNaN(ref.used.value)){ref.used.value = 0}
+
+                    tempSkill.init(ref.name.value,ref.rank.value,ref.level.value,ref.used.value)
+
+                    //clear the fields after making the skill
+                    ref.name.value = ""
+                    ref.rank.value = 0
+                    ref.level.value = 0
+                    ref.used.value = 0
+                    
+
+                    tempChar.addSkill((i+1),tempSkill)
+                }
+                newChar.overwriteCharacterFromObject(tempChar)
+                UpdateCharacterSheet()
+                UpdateSkillButtons()
+                showHideLeftSide(0)
+
             }
         </script>
     </head>
@@ -275,6 +303,7 @@
 
                     <h4>SKILLS</h4>
                     <div id="skillCreateContainer"></div>
+                    <button id="SubmitCharacterBox" onclick="SubmitCharacterCreator()">MAKE CHARACTER</button>
                 </div>
                 
                 <div class="subSection" id="charSaveLoad">
@@ -285,7 +314,7 @@
                 </div>
             </section>
 
-            <!-- NOTES / FIELD / STATS-->
+<!-- NOTES / FIELD / STATS-->
             <section id="MiddleSection">
                 <div class="mainSectionNavBar">
                     <button>NOTES</button>
@@ -329,7 +358,6 @@
                     </div>
 
                     <script>
-
                         const skillsContainer = document.getElementById("skillsButtonDiv");
 
                         for(let i =0; i<CHAR_DEFAULT_SKILL_LIMIT;i++){
@@ -412,12 +440,13 @@
         let skillCreateContainer = document.getElementById("skillCreateContainer")
         for(let i=0;i<CHAR_DEFAULT_SKILL_LIMIT;i++){
             let e = new CharCreateSkillButton(skillCreateContainer,i,newChar)
-            e.buildButton()
+            createCharacterSkillListInputs[i] = e.buildButton()
             skillCreateContainer.appendChild(document.createElement("BR"))
         }
         
     //Save load (since I coudln't do it inline :c )
         document.getElementById("ImportCharacterFile").accept = "." + CHAR_FILE_EXTENTION
+
 //Set default section states
     //left side
         showHideLeftSide(2)
