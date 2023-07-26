@@ -27,9 +27,9 @@
             const rollStylesButtons = [];
 
             const createCharacterSkillListInputs = [];
-            //0: Combat ; 1: Non-Combat
+            //0: Combat ; 1: Non-Combat ; 2: Prepared roll
             let rollStyle = 0;
-            const diceType = [5,10]
+            const diceType = [5,10,5]
 
             function showHideLeftSide(pos){
                 ShowHideSubsections(leftSideSections,pos);
@@ -48,7 +48,6 @@
             }
 
             function UpdateCharacterSheet(){
-                //console.log(newChar.getName())
                 document.getElementById("CharacterName").innerHTML = newChar.getName();
                 let charSkills = newChar.getSkills()
                 let charConsequences = newChar.getConsequences()
@@ -79,10 +78,27 @@
                 }
             }
 
+
+
             function UpdateRollStyle(pos){
                 EnableDisableNavButtons(rollStylesButtons,pos);
                 rollStyle = pos;
                 UpdateRollOutput();
+            }
+
+            function getRemainingDiceCode(remaining){
+                switch(remaining){
+                    case 0: 
+                        return ""
+                        break;
+                    case 1:
+                        return "1"
+                        break;
+                    default:
+                        return ("1d" + remaining)
+                }
+
+                return null
             }
 
             function UpdateRollOutput(){
@@ -92,11 +108,14 @@
                 let outputText = ""
 
                 switch(rollStyle){
-                    case 0:
+                    case 0: //combat
                         outputText = "/r [[2d5]][base]"
                         break;
-                    case 1:
+                    case 1: //non-combat
                         outputText = "/r [[1d10!]][base]"
+                        break;
+                    case 2: //preprared
+                        outputText = "/r [[{{2d5},0d0+6}kh1]][base]"
                         break;
                     default:
                         outputText = "/r "
@@ -108,20 +127,43 @@
                     if(skillset[i] == null){continue;}
                     //end nullchecks
 
-                    //"prepared dice look like this:"
-                    // [[{{XdX},0d0+MIN}kh1]]
+
+                    //MIN = minValue * dice count
                     let rollingDice = Math.floor(skillset[i].getLevel()/diceType[rollStyle])
-                    let remaing = skillset[i].getLevel()%diceType[rollStyle]
-                    outputText = outputText + " + [["
+                    let remain = skillset[i].getLevel()%diceType[rollStyle]
+                    
+
                     if(rollingDice > 0){
-                        outputText = outputText + rollingDice + DICE[rollStyle];
+                        outputText = outputText + " + [["
+                        switch(rollStyle){
+                            case 2: //prepared has a special syntax [[{{rollingDice d5},0d0+MIN}kh1]]
+                                outputText = outputText + "{{" + rollingDice + DICE[rollStyle] + "},0d0+" 
+                                    + (PREPARED_DICE_MINIMUM * rollingDice) + "}kh1]]"
+                                break;
+                            default:
+                                outputText = outputText + rollingDice + DICE[rollStyle];
+                        }
                     }
-                    if(rollingDice > 0 && remaing != 0){
-                        outputText = outputText + " + 1d" + remaing;
-                    }else if(remaing != 0){
-                        outputText = outputText + "1d" + remaing;
+
+                    if(rollingDice > 0 && remain != 0){//extra dice
+                        switch(rollStyle){
+                            case 2: 
+                                outputText = outputText + " + [[" + getRemainingDiceCode(remain);
+                                break;
+                            default:
+                                outputText = outputText + " + " + getRemainingDiceCode(remain);
+                        }
+                    }else if(remain != 0){//no extra dice, level is just <dice
+                        outputText = outputText + " + [["
+                        outputText = outputText + getRemainingDiceCode(remain);
                     }
-                    outputText = outputText + "]][" + skillset[i].getName() +"]"
+
+                    if(rollingDice != 0 || remain != 0){
+                        outputText = outputText + "]]"
+                    }
+
+                    outputText = outputText + "[" + skillset[i].getName() +"]"
+
                 }
 
                 outputText =  outputText + (document.getElementById("ExtraRollCodeInput").value)
@@ -340,6 +382,7 @@
                     <div id="rollStylesContainer">
                         <button id="rollStyleCombatButton" onclick="UpdateRollStyle(0)">COMBAT</button>
                         <button id="rollStyleNonCombatButton" onclick="UpdateRollStyle(1)">NON-COMBAT</button>
+                        <button id="rollStylePreparedButton" onclick="UpdateRollStyle(2)">PREPARED</button>
                     </div>
 
                     <h3>Roll Skills: </h3>
@@ -415,6 +458,8 @@
     //Right Side Stuff
         rollStylesButtons[0] = document.getElementById("rollStyleCombatButton");
         rollStylesButtons[1] = document.getElementById("rollStyleNonCombatButton");
+        rollStylesButtons[2] = document.getElementById("rollStylePreparedButton");
+        
 //build default stuff
         const skillTable = document.getElementById("CharTable")
         const consequenceTable = document.getElementById("ConsequenceTable")

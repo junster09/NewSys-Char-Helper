@@ -5,9 +5,10 @@ const CHAR_DEFAULT_SKILL_LIMIT = 10
 //0: Combat ; 1: Non-Combat
 const DICE = [
     "d5",
-    "d10!"
+    "d10!",
+    "d5"
 ]
-
+const PREPARED_DICE_MINIMUM = 3;
 
 //colors
 const BUTTON_ACTIVE_COLOR = "#005fff"
