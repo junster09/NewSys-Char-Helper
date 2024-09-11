@@ -2,18 +2,24 @@
 const CHAR_FILE_EXTENTION = "nsc"
 const CHAR_DEFAULT_SKILL_LIMIT = 10
 
-//0: Combat ; 1: Non-Combat
+
 const DICE = [
-    "d5",
-    "d10!",
-    "d5"
+    "d5", //0 Combat Die
+    "d10!", //1 Non Combat Die
+    "d5", //2 Prepared Die
+    "d5" //3 Dazed die
 ]
+
 const PREPARED_DICE_MINIMUM = 3;
+const DAZED_DICE_MAXIMUM = 3;
 
 //colors
 const BUTTON_ACTIVE_COLOR = "#005fff"
 const BUTTON_INACTIVE_COLOR = "#4e6a99"
 const STRESS_BOX_ACTIVE_COLOR = "#e89090"
+
+//
+const CHARACTER_TABLE_HEADER_NAMES = ["Skill","Rank","Level","Used"]
 
 class SkillRank{
     constructor(_name,_color,_maxLevel){
@@ -25,15 +31,17 @@ class SkillRank{
 
 const skillRankDetails = []
 skillRankDetails[0] = new SkillRank("UNK","#ffffff",99)
-skillRankDetails[1] = new SkillRank("Bronze","#b36e00",10)
-skillRankDetails[2] = new SkillRank("Silver","#a8a8a8",20)
-skillRankDetails[3] = new SkillRank("Gold","#ffe882",30)
+skillRankDetails[1] = new SkillRank("Tin","#b36e00",5)
+skillRankDetails[2] = new SkillRank("Bronze","#b36e00",10)
+skillRankDetails[3] = new SkillRank("Silver","#a8a8a8",20)
+skillRankDetails[4] = new SkillRank("Gold","#ffe882",30)
 
 const SkillRanks = {
     UNK: 0,
-    BRONZE: 1,
-    SILVER: 2,
-    GOLD: 3,
+    TIN: 1,
+    BRONZE: 2,
+    SILVER: 3,
+    GOLD: 4,
 }
 
 class BasicSkill {
@@ -218,5 +226,97 @@ class CharCreateSkillButton{
 
     deleteButton(){
 
+    }
+}
+
+class CharacterTable{
+    //_parent is the div to add into, _character is charater
+    constructor(_parent,_character){
+        this.parent = _parent
+        this.character = _character
+    }
+
+    buildTable(){
+        this.htmlTable = document.createElement("table");
+        this.htmlTableBody = document.createElement("tbody");
+
+        //SkillTable is an array of refrences mirroring the actual table
+        this.skillTable = []
+
+        /*
+        it should look like:
+
+        [0] : [cellRef,cellRef,cellRef,cellRef]
+        [1] : [cellRef,cellRef,cellRef,cellRef]
+        etc...
+        */
+
+        //create header
+        const headerRow = document.createElement("tr");
+        for(let i=0; i < CHARACTER_TABLE_HEADER_NAMES.length; i++){
+            const cell = document.createElement("th");
+            cell.innerHTML = CHARACTER_TABLE_HEADER_NAMES[i];
+            headerRow.appendChild(cell);
+        }
+
+        this.htmlTableBody.appendChild(headerRow);
+
+        //create skill list
+        let charSkills = this.character.getSkills();
+        //make rows
+        for(let i=0; i < CHAR_DEFAULT_SKILL_LIMIT; i++){
+            const row = document.createElement("tr");
+            this.skillTable[i] = []
+            let skill = charSkills[i];
+            let details = [];
+            
+            if(skill == null){
+                details = ["NONE","X","X","X"]
+            }else{
+                details[0] = skill.getName();
+                details[1] = skillRankDetails[skill.getRank()].name;
+                details[2] = skill.getLevel();
+                details[3] = skill.getTimesUsed();
+            }
+
+            for(let j=0; j < details.length; j++){
+                const cell = document.createElement("td");
+                cell.innerHTML = details[j];
+                row.appendChild(cell)
+                this.skillTable[i][j] = cell
+            }
+
+            this.htmlTableBody.appendChild(row)
+        }
+
+        this.htmlTable.appendChild(this.htmlTableBody);
+        this.parent.appendChild(this.htmlTable);
+
+    }
+
+    updateTable(){
+        //get table refrences:
+
+        for(let i=0; i < this.skillTable.length; i++){
+            console.log("hello")
+            let skill = this.character.getSkills()[i];
+            let details = [];
+            
+            if(skill == null){
+                details = ["NONE","X","X","X"]
+                console.log("Skill is null")
+            }else{
+                details[0] = skill.getName();
+                details[1] = skillRankDetails[skill.getRank()].name;
+                details[2] = skill.getLevel();
+                details[3] = skill.getTimesUsed();
+            }
+
+            for(let j=0; j < details.length; j++){
+                const cell = this.skillTable[i][j];
+                console.log(details[j])
+                cell.innerHTML = details[j];
+            }
+        }
     }
 }

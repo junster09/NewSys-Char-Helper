@@ -10,6 +10,8 @@
             //oh lol the one char class luh-mao
             var newChar = new Character();
 
+            var characterSheetTable = null;
+            
             const rollSkillsStates = [false,false,false,false,false,false,false,false,false,false]
             const stressBoxes = [];
 
@@ -27,13 +29,13 @@
             const rollStylesButtons = [];
 
             const createCharacterSkillListInputs = [];
-            //0: Combat ; 1: Non-Combat ; 2: Prepared roll
+            //0: Combat ; 1: Non-Combat ; 2: Prepared roll ; 3: Dazed
             let rollStyle = 0;
-            const diceType = [5,10,5]
+            const diceType = [5,10,5,5]
 
             function showHideLeftSide(pos){
                 ShowHideSubsections(leftSideSections,pos);
-                EnableDisableNavButtons(leftSideNavButtons,pos)
+                EnableDisableNavButtons(leftSideNavButtons,pos);
             }
 
             function showHideMiddle(pos){
@@ -51,23 +53,12 @@
                 document.getElementById("CharacterName").innerHTML = newChar.getName();
                 let charSkills = newChar.getSkills()
                 let charConsequences = newChar.getConsequences()
-                
-                //setup Skill Table
-                for(let i=0; i<newChar.getSkillLimit();i++){
-                    if(charSkills[i] == null){continue;}
 
-                    if(skillTable.rows[i+1] != null){
-                        skillTable.rows[i+1].cells[0].innerHTML = charSkills[i].getName()
-                        skillTable.rows[i+1].cells[1].innerHTML = skillRankDetails[charSkills[i].getRank()].name
-                        skillTable.rows[i+1].cells[2].innerHTML = charSkills[i].getLevel()
-                        skillTable.rows[i+1].cells[3].innerHTML = charSkills[i].getTimesUsed()
-                    }else{
-                        let newRow = skillTable.insertRow()
-                        newRow.insertCell(0).innerHTML = charSkills[i].getName()
-                        newRow.insertCell(1).innerHTML = skillRankDetails[charSkills[i].getRank()].name
-                        newRow.insertCell(2).innerHTML = charSkills[i].getLevel()
-                        newRow.insertCell(3).innerHTML = charSkills[i].getTimesUsed()
-                    }
+                if(characterSheetTable != null){
+                    console.log("character exists")
+                    characterSheetTable.updateTable()
+                }else{
+                    console.log("Character does not exist")
                 }
 
                 //setup Consequence Table
@@ -117,6 +108,12 @@
                     case 2: //preprared
                         outputText = "/r [[{{2d5},0d0+6}kh1]][base]"
                         break;
+                    case 3: //Dazed
+                        outputText = "/r [[{{2d5},0d0+6}kl1]][base]"
+                        break;
+                    case 4: //Dazed and Prepared
+                        outputText = "/r [[2*3]][base]"
+                        break;
                     default:
                         outputText = "/r "
                 }
@@ -140,6 +137,12 @@
                                 outputText = outputText + "{{" + rollingDice + DICE[rollStyle] + "},0d0+" 
                                     + (PREPARED_DICE_MINIMUM * rollingDice) + "}kh1]]"
                                 break;
+                            case 3: //dazed roll also has a special syntax [[{{rollingDice d5},0d0+MIN}kl1]]
+                                outputText = outputText + "{{" + rollingDice + DICE[rollStyle] + "},0d0+" 
+                                        + (DAZED_DICE_MAXIMUM * rollingDice) + "}kl1]]"
+                                break;
+                            case 4: //dazed and prepped has a funny syntax [[rollingDice * 3]]
+                                outputText = outputText + (rollingDice * PREPARED_DICE_MINIMUM)
                             default:
                                 outputText = outputText + rollingDice + DICE[rollStyle];
                         }
@@ -148,6 +151,9 @@
                     if(rollingDice > 0 && remain != 0){//extra dice
                         switch(rollStyle){
                             case 2: 
+                                outputText = outputText + " + [[" + getRemainingDiceCode(remain);
+                                break;
+                            case 3:
                                 outputText = outputText + " + [[" + getRemainingDiceCode(remain);
                                 break;
                             default:
@@ -303,7 +309,7 @@
 
         <div class="mainSections">
 
-            <!--CHAR SHEET / CREATE NEW / SAVE-LOAD -->
+<!--CHAR SHEET / CREATE NEW / SAVE-LOAD -->
             <section id="LeftSection">
                 <div class="mainSectionNavBar">
                     <button id="charSheetNavButton" onclick="showHideLeftSide(0)">CHAR SHEET</button>
@@ -315,15 +321,8 @@
                     <div id="CharacterHeader">
                         <h1 id="CharacterName"></h1>
                     </div>
-                    
-                    <table id="CharTable">
-                        <tr>
-                            <th>Skill</th>
-                            <th>Rank</th>
-                            <th>Level</th>
-                            <th>Used</th>
-                        </tr>
-                    </table>
+
+                    <div id="TableSpot"></div>
 
                     <section id="StressBoxes">
                         <h2>STRESS</h2>
@@ -359,19 +358,23 @@
 <!-- NOTES / FIELD / STATS-->
             <section id="MiddleSection">
                 <div class="mainSectionNavBar">
-                    <button>NOTES</button>
-                    <button>FIELD</button>
-                    <button>STATS</button>
+                    <button id="notesNavButton">NOTES</button>
+                    <button id="fieldNavButton">FIELD</button>
+                    <button id="statsNavButton">STATS</button>
                 </div>
 
                 <div class="subSection" id="notes">
                     <textarea id="notesField" name="notes" rows="40" cols="50">
                     </textarea>
                 </div>
+
+                <div class="subSection" id="field" hidden="true">
+                    <!-- how do I make a dynamic table?-->
+                </div>
                 
             </section>
 
-            <!-- ROLL MANAGER / EXTRA RULES-->
+<!-- ROLL MANAGER / EXTRA RULES-->
             <section id="RightSection">
                 <div class="mainSectionNavBar">
                     <button>ROLLS</button>
@@ -383,6 +386,7 @@
                         <button id="rollStyleCombatButton" onclick="UpdateRollStyle(0)">COMBAT</button>
                         <button id="rollStyleNonCombatButton" onclick="UpdateRollStyle(1)">NON-COMBAT</button>
                         <button id="rollStylePreparedButton" onclick="UpdateRollStyle(2)">PREPARED</button>
+                        <button id="rollStyleDazedButton" onclick="UpdateRollStyle(3)">DAZED</button>
                     </div>
 
                     <h3>Roll Skills: </h3>
@@ -454,24 +458,19 @@
         leftSideNavButtons[1] = document.getElementById("charCreateNavButton");
         leftSideNavButtons[2] = document.getElementById("charSaveLoadNavButton");
 
-    
+    //Middle Stuff
+        midNavButtons[0] = document.getElementById("notesNavButton");
+        midNavButtons[1] = document.getElementById("fieldNavButton");
+        midNavButtons[2] = document.getElementById("statsNavButton");
+
     //Right Side Stuff
         rollStylesButtons[0] = document.getElementById("rollStyleCombatButton");
         rollStylesButtons[1] = document.getElementById("rollStyleNonCombatButton");
         rollStylesButtons[2] = document.getElementById("rollStylePreparedButton");
+        rollStylesButtons[3] = document.getElementById("rollStyleDazedButton");
         
 //build default stuff
-        const skillTable = document.getElementById("CharTable")
         const consequenceTable = document.getElementById("ConsequenceTable")
-
-    //default skills
-        for(let i=0;i<CHAR_DEFAULT_SKILL_LIMIT;i++){
-            let newRow = skillTable.insertRow()
-            newRow.insertCell(0).innerHTML = "NONE"
-            newRow.insertCell(1).innerHTML = "X"
-            newRow.insertCell(2).innerHTML = "X"
-            newRow.insertCell(3).innerHTML = "X"
-        }
 
     //default consequences
         for(let i=0;i<4;i++){
@@ -491,6 +490,10 @@
         
     //Save load (since I coudln't do it inline :c )
         document.getElementById("ImportCharacterFile").accept = "." + CHAR_FILE_EXTENTION
+
+    //test table
+        characterSheetTable = new CharacterTable(document.getElementById("TableSpot"),newChar);
+        characterSheetTable.buildTable();
 
 //Set default section states
     //left side
