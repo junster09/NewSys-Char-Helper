@@ -137,6 +137,15 @@ class Character{
         this.stressBoxes[pos] = state
     }
 
+    incrementSkillUsage(_skillslot,_amount){
+        if(this.skills[i] == null){
+            return false;
+        }
+
+        this.skills[i].setTimesUsed((this.skills[i].getTimesUsed() + _amount));
+        return true;
+    }
+
 }
 
 class CharCreateSkillButton{
@@ -230,16 +239,24 @@ class CharCreateSkillButton{
 }
 
 class CharacterTable{
+
+
+
     //_parent is the div to add into, _character is charater
     constructor(_parent,_character){
         this.parent = _parent
+        this.character = _character
+        this.usageButtons = []
+        this.levelButtons = []
+    }
+
+    updateCharacter(_character){
         this.character = _character
     }
 
     buildTable(){
         this.htmlTable = document.createElement("table");
         this.htmlTableBody = document.createElement("tbody");
-
         //SkillTable is an array of refrences mirroring the actual table
         this.skillTable = []
 
@@ -281,9 +298,32 @@ class CharacterTable{
 
             for(let j=0; j < details.length; j++){
                 const cell = document.createElement("td");
-                cell.innerHTML = details[j];
+
+                if(j==3){
+                    const container = document.createElement("div");
+                    container.class = "CharSheetDiv"
+
+                    const text = document.createElement("div");
+                    text.style.display = "inline-block"
+                    text.innerHTML = details[j]
+                    container.appendChild(text);
+
+                    const button = document.createElement("button");
+                    button.style.display = "inline-block"
+                    button.innerHTML = "^"
+
+                    container.appendChild(button);
+                    cell.appendChild(container);
+
+                    this.skillTable[i][j] = text
+                    this.usageButtons[i] = button
+                }else{
+                    cell.innerHTML = details[j];
+                    this.skillTable[i][j] = cell
+                }
+                
                 row.appendChild(cell)
-                this.skillTable[i][j] = cell
+                
             }
 
             this.htmlTableBody.appendChild(row)
@@ -298,13 +338,11 @@ class CharacterTable{
         //get table refrences:
 
         for(let i=0; i < this.skillTable.length; i++){
-            console.log("hello")
             let skill = this.character.getSkills()[i];
             let details = [];
             
             if(skill == null){
                 details = ["NONE","X","X","X"]
-                console.log("Skill is null")
             }else{
                 details[0] = skill.getName();
                 details[1] = skillRankDetails[skill.getRank()].name;
@@ -314,7 +352,6 @@ class CharacterTable{
 
             for(let j=0; j < details.length; j++){
                 const cell = this.skillTable[i][j];
-                console.log(details[j])
                 cell.innerHTML = details[j];
             }
         }

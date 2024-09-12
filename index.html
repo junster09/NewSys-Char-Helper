@@ -55,10 +55,7 @@
                 let charConsequences = newChar.getConsequences()
 
                 if(characterSheetTable != null){
-                    console.log("character exists")
                     characterSheetTable.updateTable()
-                }else{
-                    console.log("Character does not exist")
                 }
 
                 //setup Consequence Table
@@ -264,10 +261,7 @@
                 URL.revokeObjectURL(link.href)
             }
 
-            function copyOutput(){
-                const textToCopy = document.getElementById("outputRollCodeActual");
-                navigator.clipboard.writeText(textToCopy.innerHTML);
-            }
+
 
             function SubmitCharacterCreator(){
                 var tempChar = new Character()
@@ -298,6 +292,27 @@
                 showHideLeftSide(0)
 
             }
+            
+            function IncrementCharacterUsage(_skillSlot,_amount){
+                let curUse = newChar.getSkills()[_skillSlot].getTimesUsed();
+                newChar.getSkills()[_skillSlot].setTimesUsed(curUse + _amount)
+                UpdateCharacterSheet()
+            }
+
+            function copyOutput(){
+                const textToCopy = document.getElementById("outputRollCodeActual");
+                navigator.clipboard.writeText(textToCopy.innerHTML);
+
+                for(let i = 0; i < rollSkillsStates.length; i++){
+                    if(rollSkillsStates[i] == true){
+                        let curUse = newChar.getSkills()[i].getTimesUsed();
+                        newChar.getSkills()[i].setTimesUsed(curUse + 1)
+                    }
+                }
+
+                UpdateCharacterSheet()
+            }
+
         </script>
     </head>
 
@@ -491,9 +506,18 @@
     //Save load (since I coudln't do it inline :c )
         document.getElementById("ImportCharacterFile").accept = "." + CHAR_FILE_EXTENTION
 
-    //test table
+    //Character Sheet Table
         characterSheetTable = new CharacterTable(document.getElementById("TableSpot"),newChar);
         characterSheetTable.buildTable();
+
+    //after setting up the table, setup the listeners to the buttons
+    for(let i = 0; i < CHAR_DEFAULT_SKILL_LIMIT; i++){
+        characterSheetTable.usageButtons[i].onclick = function(){
+            console.log(i + " , 1")
+            IncrementCharacterUsage(i,1)
+        }
+    }
+
 
 //Set default section states
     //left side

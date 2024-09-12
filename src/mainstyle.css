@@ -106,6 +106,10 @@ header{
     display: inline-block;
 }
 
+.CharSheetDiv{
+    display: inline-block;
+}
+
 .StressBoxButton{
     background-color: #5e708c;
     border: none;
