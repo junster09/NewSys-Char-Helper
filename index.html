@@ -66,8 +66,6 @@
                 }
             }
 
-
-
             function UpdateRollStyle(pos){
                 EnableDisableNavButtons(rollStylesButtons,pos);
                 rollStyle = pos;
@@ -261,8 +259,6 @@
                 URL.revokeObjectURL(link.href)
             }
 
-
-
             function SubmitCharacterCreator(){
                 var tempChar = new Character()
                 tempChar.init(document.getElementById("nameField").value)
@@ -275,7 +271,7 @@
                     if(ref.level.value == "" || isNaN(ref.level.value)){ref.level.value = 0}
                     if(ref.used.value =="" || isNaN(ref.used.value)){ref.used.value = 0}
 
-                    tempSkill.init(ref.name.value,ref.rank.value,ref.level.value,ref.used.value)
+                    tempSkill.init(ref.name.value,parseInt(ref.rank.value),parseInt(ref.level.value),parseInt(ref.used.value))
 
                     //clear the fields after making the skill
                     ref.name.value = ""
