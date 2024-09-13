@@ -20,7 +20,8 @@ const STRESS_BOX_ACTIVE_COLOR = "#e89090"
 
 //
 const CHARACTER_TABLE_HEADER_NAMES = ["Skill","Rank","Level","Used"]
-
+const FIELD_TABLE_HEADER_NAMES = ["Weight","Name","Free Invoke",""]
+const FIELD_TABLE_DATA_TYPES = ["number","text","number"]
 class SkillRank{
     constructor(_name,_color,_maxLevel){
         this.name = _name
@@ -44,6 +45,37 @@ const SkillRanks = {
     GOLD: 4,
 }
 
+
+//Invokables are things that could be invoked (boosts/debuffs/consequences)
+class Invokable{
+    constructor(_name,_weight,_freeInvokeCount){
+        if(_name == null){this.name = ""}else{this.name = _name}
+        if(_weight == null){this.weight = 0}else{this.weight = _weight}
+        if(_freeInvokeCount == null){this.freeInvokeCount = 0}else{this.freeInvokeCount = _freeInvokeCount}
+    }
+
+    invoke(){
+        if(this.weight >= 0){
+            return ("+" + this.weight)
+        }else{
+            return ("-" + Math.abs(this.weight))
+        };
+    }
+
+    countdown(_amount){
+        this.freeInvokeCount = this.freeInvokeCount - _amount
+    }
+
+    getName(){return this.name}
+    setName(_name){this.name = _name}
+
+    getWeight(){return this.weight}
+    setWeight(_weight){this.weight = _weight}
+
+    getFreeInvokeCount(){return this.freeInvokeCount}
+    setFreeInvokeCount(_amount){this.freeInvokeCount = _amount}
+}
+//basic skills have informatoin about skills
 class BasicSkill {
     constructor(){
         this.name = "";
@@ -147,7 +179,6 @@ class Character{
     }
 
 }
-
 class CharCreateSkillButton{
     constructor(_parent,_skillSlot,_char){
         this.parent = _parent
@@ -237,11 +268,7 @@ class CharCreateSkillButton{
 
     }
 }
-
 class CharacterTable{
-
-
-
     //_parent is the div to add into, _character is charater
     constructor(_parent,_character){
         this.parent = _parent
@@ -301,15 +328,15 @@ class CharacterTable{
 
                 if(j==3){
                     const container = document.createElement("div");
-                    container.class = "CharSheetDiv"
+                    container.className = "CharSheetDiv"
 
                     const text = document.createElement("div");
-                    text.style.display = "inline-block"
+                    text.className = "incrementButtonText"
                     text.innerHTML = details[j]
                     container.appendChild(text);
 
                     const button = document.createElement("button");
-                    button.style.display = "inline-block"
+                    button.className = "incrementButton"
                     button.innerHTML = "^"
 
                     container.appendChild(button);
@@ -356,4 +383,96 @@ class CharacterTable{
             }
         }
     }
+}
+class FieldTable{
+
+    constructor(_parent,_fieldTable){
+        this.parent = _parent
+        if(_fieldTable != null){
+
+        }else{
+            this.fieldTable = []
+        }
+
+        this.inputRefs = []
+    }
+
+    addLine(_invokeToAdd){
+
+    }
+
+    buildTable(){
+        //nav header
+
+        //table Container/body
+        this.htmlTable = document.createElement("table");
+        this.htmlTableBody = document.createElement("tbody");
+
+        //Table Headers
+        const headerRow = document.createElement("tr");
+        for(let i=0; i < FIELD_TABLE_HEADER_NAMES.length; i++){
+            const cell = document.createElement("th");
+            cell.innerHTML = FIELD_TABLE_HEADER_NAMES[i];
+            headerRow.appendChild(cell);
+        }
+        this.htmlTableBody.appendChild(headerRow);
+
+        //body will be populated later
+
+        
+
+        //add "add new line" (it's actually just another table lmao)
+        this.newLineTable = document.createElement("table");
+        this.newLineTableBody = document.createElement("tbody");
+        this.newLineInputRefrences = []
+        const newLineHeaderRow = document.createElement("tr");
+
+        for(let i=0; i < (FIELD_TABLE_HEADER_NAMES.length - 1); i++){
+            const cell = document.createElement("th");
+            cell.innerHTML = FIELD_TABLE_HEADER_NAMES[i];
+            newLineHeaderRow.appendChild(cell);
+        }
+
+        this.newLineTableBody.appendChild(newLineHeaderRow)
+        const inputRow = document.createElement("tr")
+
+        for(let i=0; i < (FIELD_TABLE_HEADER_NAMES.length - 1); i++){
+            const cell = document.createElement("td");
+            cell.name = FIELD_TABLE_HEADER_NAMES[i] + " cell"
+
+            const inputContainer = document.createElement("div");
+            inputContainer.name = FIELD_TABLE_HEADER_NAMES[i] + " input container"
+
+            const inputField = document.createElement("input");
+            inputField.type = FIELD_TABLE_DATA_TYPES[i]
+
+            this.inputRefs[i] = inputField
+
+            inputContainer.appendChild(inputField)
+            cell.appendChild(inputContainer)
+            inputRow.appendChild(cell)
+        }
+
+        this.newLineTableBody.appendChild(inputRow)
+        this.newLineTable.appendChild(this.newLineTableBody)
+
+        //weight
+
+        //add new button
+        this.addNewButton = document.createElement("button");
+        this.addNewButton.innerHTML = "ADD NEW FIELD"
+
+        //append in order
+        
+        this.parent.appendChild(this.htmlTableBody)
+        this.parent.appendChild(this.newLineTable)
+        this.parent.appendChild(this.addNewButton)
+        
+    }
+
+    updateTable(){
+    
+    }
+
+
 }

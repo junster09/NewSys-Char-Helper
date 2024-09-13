@@ -19,6 +19,7 @@ th,td{
     color: white;
     padding: 0.1% 0.7%;
     margin: 0.1%;
+    text-align: center;
 }
 
 header{
@@ -31,6 +32,7 @@ header{
     display: flex;
     background-color: #5e708c;
 }
+
 .mainSections > section{
     background-color: #679ef5;
     width: 40%;
@@ -107,7 +109,17 @@ header{
 }
 
 .CharSheetDiv{
-    display: inline-block;
+    overflow:hidden;
+    min-width: inherit;
+    max-width: 95%;
+    min-height: fit-content;
+    max-height: 90%;
+}
+.incrementButton{
+    float: right;
+}
+.incrementButtonText{
+    float: left;
 }
 
 .StressBoxButton{
@@ -121,7 +133,6 @@ header{
     margin: 1%;
     cursor: pointer;
 }
-
 .skillButton{
     background-color: #5e708c;
     border: none;
@@ -133,7 +144,6 @@ header{
     margin: 0.5%;
     cursor: pointer;
 }
-
 .radioContainer{
     display: inline-block;
     position: relative;
@@ -146,13 +156,11 @@ header{
     -ms-user-select: none;
     user-select: none;
 }
-
 .radioContainer input{
     position: absolute;
     opacity: 0;
     cursor: pointer;
 }
-
 .checkmark{
     position: absolute;
     right: -30%;
@@ -161,7 +169,6 @@ header{
     background-color: #eee;
     border-radius: 50%;
 }
-
 .radioContainer:hover input ~ .checkmark{
     background-color: #ccc;
 }

@@ -11,6 +11,7 @@
             var newChar = new Character();
 
             var characterSheetTable = null;
+            var fieldTable = null;
             
             const rollSkillsStates = [false,false,false,false,false,false,false,false,false,false]
             const stressBoxes = [];
@@ -40,7 +41,7 @@
 
             function showHideMiddle(pos){
                 ShowHideSubsections(midSections,pos);
-                EnableDisableNavButtons(midSections,pos);
+                EnableDisableNavButtons(midNavButtons,pos);
             }
 
             function showHideRightSide(pos){
@@ -369,18 +370,23 @@
 <!-- NOTES / FIELD / STATS-->
             <section id="MiddleSection">
                 <div class="mainSectionNavBar">
-                    <button id="notesNavButton">NOTES</button>
-                    <button id="fieldNavButton">FIELD</button>
-                    <button id="statsNavButton">STATS</button>
+                    <button id="notesNavButton" onclick="showHideMiddle(0)">NOTES</button>
+                    <button id="fieldNavButton" onclick="showHideMiddle(1)">FIELD</button>
+                    <button id="statsNavButton" onclick="showHideMiddle(2)">STATS</button>
                 </div>
 
-                <div class="subSection" id="notes">
+                <div class="subSection" id="notesDiv">
                     <textarea id="notesField" name="notes" rows="40" cols="50">
                     </textarea>
                 </div>
 
-                <div class="subSection" id="field" hidden="true">
+                <div class="subSection" id="fieldDiv">
                     <!-- how do I make a dynamic table?-->
+                    <div id="FieldDiv"></div>
+                </div>
+
+                <div class="subSection" id="statsDiv">
+
                 </div>
                 
             </section>
@@ -474,6 +480,10 @@
         midNavButtons[1] = document.getElementById("fieldNavButton");
         midNavButtons[2] = document.getElementById("statsNavButton");
 
+        midSections[0] = document.getElementById("notesDiv");
+        midSections[1] = document.getElementById("fieldDiv");
+        midSections[2] = document.getElementById("statsDiv");
+
     //Right Side Stuff
         rollStylesButtons[0] = document.getElementById("rollStyleCombatButton");
         rollStylesButtons[1] = document.getElementById("rollStyleNonCombatButton");
@@ -513,6 +523,10 @@
             IncrementCharacterUsage(i,1)
         }
     }
+
+    //field Table
+    fieldTable = new FieldTable(document.getElementById("fieldDiv"),null);
+    fieldTable.buildTable()
 
 
 //Set default section states
