@@ -10,6 +10,26 @@ const DICE = [
     "d5" //3 Dazed die
 ]
 
+const CONSEQUENCE_TYPE = {
+    TEMPORARY: 0,
+    MILD: 1,
+    MODERATE: 2,
+    SEVERE: 3,
+    EXTREME: 4,
+    FATE_ALTERING: 5
+}
+
+const CONSEQUENCE_TYPE_STRING = [
+    "Temporary",
+    "Mild",
+    "Moderate",
+    "Severe",
+    "Extreme",
+    "Fate Altering"
+]
+
+
+
 const PREPARED_DICE_MINIMUM = 3;
 const DAZED_DICE_MAXIMUM = 3;
 
@@ -74,6 +94,18 @@ class Invokable{
 
     getFreeInvokeCount(){return this.freeInvokeCount}
     setFreeInvokeCount(_amount){this.freeInvokeCount = _amount}
+}
+
+class Consequence extends Invokable{
+    constructor(_name,_weight,_freeInvokeCount,_consequenceType){
+        super(_name,_weight,_freeInvokeCount)
+        this.severity = _consequenceType
+    }
+
+    getSeverity(){return this.severity}
+    getSeverityString(){return CONSEQUENCE_TYPE_STRING[this.severity]}
+
+    
 }
 //basic skills have informatoin about skills
 class BasicSkill {
@@ -268,6 +300,8 @@ class CharCreateSkillButton{
 
     }
 }
+
+
 class CharacterTable{
     //_parent is the div to add into, _character is charater
     constructor(_parent,_character){

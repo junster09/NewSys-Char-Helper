@@ -34,6 +34,8 @@
             let rollStyle = 0;
             const diceType = [5,10,5,5]
 
+            let rollOutputCodeString = "";
+
             function showHideLeftSide(pos){
                 ShowHideSubsections(leftSideSections,pos);
                 EnableDisableNavButtons(leftSideNavButtons,pos);
@@ -88,31 +90,69 @@
                 return null
             }
 
+            function formatArbitraryCode(_input){
+                /*
+                Read code for the following things:
+                + at the start
+                - at the start
+                [BLANK] at the start
+                */
+                var outputCode = ""
+                var firstInput = _input.slice(0,1)
+
+                if(firstInput == "-"){
+                    outputCode = " - [[(" + _input.slice(1,_input.length) + ")]][Arbitrary]"
+                    
+                }else{
+                    outputCode = " + [[(" + _input.slice(1,_input.length) + ")]][Arbitrary]"
+                }
+
+                return outputCode
+            }
+
             function UpdateRollOutput(){
                 const textBox = document.getElementById("outputRollCodeActual")
                 let skillset = newChar.getSkills()
 
-                let outputText = ""
+                /*
+                Output code should consist of 3 things:
+                the Header: &{template:default}{{name= PURPLE_HEADER_TEXT}}
+
+                the roll: {total= [[ all the roll code goes here]]}
+
+                the display refrences: {SKILL_NAME: $[[index]]}
+                */
+               if(newChar.name == ""){newChar.name = "NO NAME"}
+                
+                let headerCode = "&{template:default}{{name=" + newChar.name + "}}{{Total=[[ "
+                
+                let rollCode = ""
+
+                //note that the base roll is 0
+                let displayCode = " {{BASE = $[[0]]}} "
 
                 switch(rollStyle){
                     case 0: //combat
-                        outputText = "/r [[2d5]][base]"
+                        rollCode = " [[2d5]][base] "
                         break;
                     case 1: //non-combat
-                        outputText = "/r [[1d10!]][base]"
+                        rollCode = " [[1d10!]][base]"
                         break;
                     case 2: //preprared
-                        outputText = "/r [[{{2d5},0d0+6}kh1]][base]"
+                        rollCode = " [[{{2d5},0d0+6}kh1]][base]"
                         break;
                     case 3: //Dazed
-                        outputText = "/r [[{{2d5},0d0+6}kl1]][base]"
+                        rollCode = " [[{{2d5},0d0+6}kl1]][base]"
                         break;
                     case 4: //Dazed and Prepared
-                        outputText = "/r [[2*3]][base]"
+                        rollCode = " [[2*3]][base]"
                         break;
                     default:
-                        outputText = "/r "
+                        rollCode = ""
                 }
+
+                //this is a seperate index for roll queries <the number in the $[[#]]
+                let RollIndex = 0
 
                 for(let i=0;i<newChar.getSkillLimit();i++){
                     //covers both null and false cases
@@ -125,51 +165,64 @@
                     let rollingDice = Math.floor(skillset[i].getLevel()/diceType[rollStyle])
                     let remain = skillset[i].getLevel()%diceType[rollStyle]
                     
-
-                    if(rollingDice > 0){
-                        outputText = outputText + " + [["
+                    //format for writing Xd5
+                    if(rollingDice > 0){ 
+                        rollCode = rollCode + " + [[" // + [[
                         switch(rollStyle){
-                            case 2: //prepared has a special syntax [[{{rollingDice d5},0d0+MIN}kh1]]
-                                outputText = outputText + "{{" + rollingDice + DICE[rollStyle] + "},0d0+" 
-                                    + (PREPARED_DICE_MINIMUM * rollingDice) + "}kh1]]"
+                            case 2: //prepared has a special syntax ({{rollingDice d5},0d0+MIN}kh1) + remaining
+                                rollCode = rollCode + "({{" + rollingDice + DICE[rollStyle] + "},0d0+" 
+                                    + (PREPARED_DICE_MINIMUM * rollingDice) + "}kh1)"
                                 break;
-                            case 3: //dazed roll also has a special syntax [[{{rollingDice d5},0d0+MIN}kl1]]
-                                outputText = outputText + "{{" + rollingDice + DICE[rollStyle] + "},0d0+" 
-                                        + (DAZED_DICE_MAXIMUM * rollingDice) + "}kl1]]"
+                            case 3: //dazed roll also has a special syntax ({{rollingDice d5},0d0+MIN}kl1) + remain
+                                rollCode = rollCode + "({{" + rollingDice + DICE[rollStyle] + "},0d0+" 
+                                        + (DAZED_DICE_MAXIMUM * rollingDice) + "}kl1)"
                                 break;
                             case 4: //dazed and prepped has a funny syntax [[rollingDice * 3]]
-                                outputText = outputText + (rollingDice * PREPARED_DICE_MINIMUM)
-                            default:
-                                outputText = outputText + rollingDice + DICE[rollStyle];
+                                rollCode = rollCode + (rollingDice * PREPARED_DICE_MINIMUM)
+                                break;
+                            default: // [rollingdice]d[type]
+                                rollCode = rollCode + "(" + rollingDice + DICE[rollStyle] + ")";
                         }
                     }
-
-                    if(rollingDice > 0 && remain != 0){//extra dice
+                    //format for writing things that are less than Xd5 + XdX
+                    if(rollingDice > 0 && remain != 0){ //the Xd5 has been written, this is just the XdX part
                         switch(rollStyle){
-                            case 2: 
-                                outputText = outputText + " + [[" + getRemainingDiceCode(remain);
+                            case 2: //builds off of prepared 
+                                rollCode = rollCode + " + (" + getRemainingDiceCode(remain) + ")";
                                 break;
-                            case 3:
-                                outputText = outputText + " + [[" + getRemainingDiceCode(remain);
+                            case 3: //builds off of dazed
+                                rollCode = rollCode + " + (" + getRemainingDiceCode(remain) + ")";
                                 break;
                             default:
-                                outputText = outputText + " + " + getRemainingDiceCode(remain);
+                                rollCode = rollCode + " + (" + getRemainingDiceCode(remain) + ")";
                         }
-                    }else if(remain != 0){//no extra dice, level is just <dice
-                        outputText = outputText + " + [["
-                        outputText = outputText + getRemainingDiceCode(remain);
+
+                    }else if(remain != 0){// case for no Xd5 + XdX, it's just [[XdX]]
+                        rollCode = rollCode + " + [["
+                        rollCode = rollCode + getRemainingDiceCode(remain);
                     }
 
-                    if(rollingDice != 0 || remain != 0){
-                        outputText = outputText + "]]"
+                    if(rollingDice != 0 || remain != 0){ //close brackets, if there was anything to write
+                        rollCode = rollCode + "]]"
+                        RollIndex = RollIndex + 1 //increment RollIndex because we only write "]]" if we made a roll
                     }
 
-                    outputText = outputText + "[" + skillset[i].getName() +"]"
+                    rollCode = rollCode + "[" + skillset[i].getName() +"]"
+                    displayCode = displayCode + " {{" + skillset[i].getName() + " = $[[" + (RollIndex) + "]]}}"
 
                 }
 
-                outputText =  outputText + (document.getElementById("ExtraRollCodeInput").value)
-                textBox.innerHTML = outputText
+                //update with Arbitrary
+                let arbitraryCode = document.getElementById("ExtraRollCodeInput").value
+
+                if(arbitraryCode != ""){
+                    rollCode =  rollCode + formatArbitraryCode(arbitraryCode)
+                    displayCode = displayCode + " {{Arbitrary= $[[" + (RollIndex + 1) + "]]}}"
+                }
+
+                var exportText = headerCode + rollCode + " ]]}} " + displayCode
+                rollOutputCodeString = exportText
+                textBox.innerHTML = exportText
             }
 
             function UpdateSkillButtons(){
@@ -297,8 +350,7 @@
             }
 
             function copyOutput(){
-                const textToCopy = document.getElementById("outputRollCodeActual");
-                navigator.clipboard.writeText(textToCopy.innerHTML);
+                navigator.clipboard.writeText(rollOutputCodeString);
 
                 for(let i = 0; i < rollSkillsStates.length; i++){
                     if(rollSkillsStates[i] == true){
