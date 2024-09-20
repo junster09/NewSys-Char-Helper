@@ -46,12 +46,12 @@ class SkillRank{
     constructor(_name,_color,_maxLevel){
         this.name = _name
         this.color = _color
-        this._maxLevel = _maxLevel
+        this.maxLevel = _maxLevel
     }
 }
 
 const skillRankDetails = []
-skillRankDetails[0] = new SkillRank("UNK","#ffffff",99)
+skillRankDetails[0] = new SkillRank("UNK","#ffffff",9999)
 skillRankDetails[1] = new SkillRank("Tin","#b36e00",5)
 skillRankDetails[2] = new SkillRank("Bronze","#b36e00",10)
 skillRankDetails[3] = new SkillRank("Silver","#a8a8a8",20)
@@ -121,10 +121,25 @@ class BasicSkill {
     setName(_name){this.name = _name;}
 
     getRank(){return this.rank;}
-    setRank(_rank){this.rank = _rank;}
+    setRank(_rank){
+        if(skillRankDetails[_rank] == null){
+            this.rank = SkillRanks.UNK
+        }else{
+            this.rank = _rank;
+        }
+        
+    }
 
     getLevel(){return this.level;}
-    setLevel(_level){this.level = _level}
+    setLevel(_level){
+        
+        if(_level > skillRankDetails[this.rank].maxLevel){
+            this.level = this.level % skillRankDetails[this.rank].maxLevel
+            this.setRank(this.rank + 1)
+        } else{
+            this.level = _level
+        }
+    }
 
     getTimesUsed(){return this.timesUsedSinceLastLevel;}
     setTimesUsed(_timesUsed){this.timesUsedSinceLastLevel = _timesUsed}
@@ -360,27 +375,57 @@ class CharacterTable{
             for(let j=0; j < details.length; j++){
                 const cell = document.createElement("td");
 
-                if(j==3){
-                    const container = document.createElement("div");
-                    container.className = "CharSheetDiv"
+                var container;
+                var text;
+                var button;
 
-                    const text = document.createElement("div");
-                    text.className = "incrementButtonText"
-                    text.innerHTML = details[j]
-                    container.appendChild(text);
+                switch (j){
 
-                    const button = document.createElement("button");
-                    button.className = "incrementButton"
-                    button.innerHTML = "^"
+                    case 2: //level button
 
-                    container.appendChild(button);
-                    cell.appendChild(container);
+                        container = document.createElement("div");
+                        container.className = "CharSheetDiv"
 
-                    this.skillTable[i][j] = text
-                    this.usageButtons[i] = button
-                }else{
-                    cell.innerHTML = details[j];
-                    this.skillTable[i][j] = cell
+                        text = document.createElement("div");
+                        text.className = "incrementButtonText"
+                        text.innerHTML = details[j]
+                        container.appendChild(text);
+
+                        button = document.createElement("button");
+                        button.className = "incrementButton"
+                        button.innerHTML = "^"
+
+                        container.appendChild(button);
+                        cell.appendChild(container);
+
+                        this.skillTable[i][j] = text
+                        this.levelButtons[i] = button
+                        break;
+
+                    case 3: //increment button
+
+                        container = document.createElement("div");
+                        container.className = "CharSheetDiv"
+
+                        text = document.createElement("div");
+                        text.className = "incrementButtonText"
+                        text.innerHTML = details[j]
+                        container.appendChild(text);
+
+                        button = document.createElement("button");
+                        button.className = "incrementButton"
+                        button.innerHTML = "^"
+
+                        container.appendChild(button);
+                        cell.appendChild(container);
+
+                        this.skillTable[i][j] = text
+                        this.usageButtons[i] = button
+                        break;
+
+                    default:
+                        cell.innerHTML = details[j];
+                        this.skillTable[i][j] = cell
                 }
                 
                 row.appendChild(cell)

@@ -1,6 +1,7 @@
-1) Add UI to level up/down skills
-2) Add UI to change skills alltogether
-3) Add Field invokables
-4) Make consequences a type of invokables
-5) Make consequence table on character sheet a dynamic table
-6) Add option to re-enable exploding dice on combat, prepared rolls
+1) Add UI to change skills alltogether
+2) Add Field invokables
+3) Make consequences a type of invokables
+4) Make consequence table on character sheet a dynamic table
+5) Add option to re-enable exploding dice on combat, prepared rolls
+6) Fix UI overflow with the "new field" option.
+7) Add site cookies.

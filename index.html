@@ -349,6 +349,12 @@
                 UpdateCharacterSheet()
             }
 
+            function IncrementCharacterLevel(_skillSlot,_amount){
+                let curLevel = newChar.getSkills()[_skillSlot].getLevel();
+                newChar.getSkills()[_skillSlot].setLevel(curLevel + _amount);
+                UpdateCharacterSheet()
+            }
+
             function copyOutput(){
                 navigator.clipboard.writeText(rollOutputCodeString);
 
@@ -571,8 +577,11 @@
     //after setting up the table, setup the listeners to the buttons
     for(let i = 0; i < CHAR_DEFAULT_SKILL_LIMIT; i++){
         characterSheetTable.usageButtons[i].onclick = function(){
-            console.log(i + " , 1")
             IncrementCharacterUsage(i,1)
+        }
+
+        characterSheetTable.levelButtons[i].onclick = function(){
+            IncrementCharacterLevel(i,1)
         }
     }
 
